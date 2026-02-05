@@ -2,13 +2,13 @@ name: Add simple GitHub Actions workflow
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
 
 jobs:
   hello:
     runs-on: ubuntu-latest
     steps:
       - name: Print a message
-        run: echo "Hello from liel the queen!"
+        run: echo "Hello from Liel the queen!"
       - name: Print the actor
         run: echo "The actor is: ${{ github.actor }}"
