@@ -71,5 +71,5 @@ jobs:
       - name: Push image to GHCR
         run: |
           IMAGE="ghcr.io/${GITHUB_REPOSITORY}:${{ needs.compute_tag.outputs.tag }}"
+          echo "Pushing $IMAGE"
           docker push "$IMAGE"
-          echo "Pushed $IMAGE"
