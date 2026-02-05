@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Print a message
-        run: echo "Hello from Liel the queen!"
+        run: |
+          echo "Hello from Liel the queen!"
+
       - name: Print the actor
-        run: echo "The actor is: ${{ github.actor }}"
+        run: |
+          echo "The actor is: ${{ github.actor }}"
