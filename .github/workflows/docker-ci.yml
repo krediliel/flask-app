@@ -1,0 +1,75 @@
+name: "Docker - pass tag + image between jobs (outputs + artifacts)"
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  compute_tag:
+    runs-on: ubuntu-latest
+
+    outputs:
+      tag: ${{ steps.t.outputs.tag }}
+
+    steps:
+      - name: Compute tag (step output)
+        id: t
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          TAG="sha-${SHORT_SHA}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Computed TAG=$TAG"
+
+  build_image:
+    runs-on: ubuntu-latest
+    needs: compute_tag
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY}:${{ needs.compute_tag.outputs.tag }}"
+          echo "Building $IMAGE"
+          docker build -t "$IMAGE" .
+
+      - name: Save image to artifact (docker save)
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY}:${{ needs.compute_tag.outputs.tag }}"
+          docker save "$IMAGE" -o image.tar
+          ls -lh image.tar
+
+      - name: Upload image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: image.tar
+
+  push_image:
+    runs-on: ubuntu-latest
+    needs: build_image
+
+    steps:
+      - name: Download image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+          path: .
+
+      - name: Load image (docker load)
+        run: |
+          docker load -i image.tar
+
+      - name: Login to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Push image to GHCR
+        run: |
+          IMAGE="ghcr.io/${GITHUB_REPOSITORY}:${{ needs.compute_tag.outputs.tag }}"
+          docker push "$IMAGE"
+          echo "Pushed $IMAGE"
