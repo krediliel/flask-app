@@ -10,6 +10,12 @@ def home():
 def health():
     return jsonify(status="ok"), 200
 
+@app.get("/ai")
+def ai():
+    return jsonify(invoke_ai="predict next day"), 200
+
+
 if __name__ == "__main__":
     # ל-local run בלבד; בדוקר נריץ דרך gunicorn
     app.run(host="0.0.0.0", port=5000)
+
